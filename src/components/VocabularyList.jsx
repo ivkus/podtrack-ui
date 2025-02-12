@@ -65,21 +65,6 @@ export default function VocabularyList() {
     },
   ];
 
-  const fetchVocabulary = async ({ pageIndex }) => {
-    try {
-      setLoading(true);
-      const response = await vocabularyApi.getAll(pageIndex + 1);
-      const { results, count } = response.data;
-      setVocabulary(results || []);
-      setPageCount(Math.ceil(count / 10));
-    } catch (error) {
-      setError('Failed to load vocabulary');
-      console.error('Error fetching vocabulary:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleToggleMastered = async (id) => {
     try {
       await vocabularyApi.toggleMastered(id);
@@ -104,6 +89,26 @@ export default function VocabularyList() {
     }
   };
 
+  const fetchVocabulary = async ({ pageIndex }) => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({ 
+        page: pageIndex + 1,
+        ...(table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Mastered' && { mastered: true }),
+        ...(table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Learning' && { mastered: false })
+      });
+      const response = await vocabularyApi.getAll(params);
+      const { results, count } = response.data;
+      setVocabulary(results || []);
+      setPageCount(Math.ceil(count / 10));
+    } catch (error) {
+      setError('Failed to load vocabulary');
+      console.error('Error fetching vocabulary:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const table = useReactTable({
     data: vocabulary,
     columns,
@@ -117,12 +122,15 @@ export default function VocabularyList() {
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     manualPagination: true,
+    manualFiltering: true,
     debugTable: true,
   });
 
   useEffect(() => {
-    fetchVocabulary({ pageIndex: pagination.pageIndex });
-  }, [pagination.pageIndex]);
+    fetchVocabulary({ 
+      pageIndex: pagination.pageIndex 
+    });
+  }, [pagination.pageIndex, table.getState().columnFilters[2]?.value]);
 
   if (loading && vocabulary.length === 0) {
     return (

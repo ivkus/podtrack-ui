@@ -3,7 +3,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getPaginationRowModel,
 } from '@tanstack/react-table';
 import { Button } from './ui/button';
 import { articlesApi } from '../services/api';
@@ -57,10 +56,8 @@ export default function ArticleList({ onSelectArticle }) {
     try {
       setLoading(true);
       const response = await articlesApi.getAll(pageIndex + 1);
-      console.log('Fetched articles:', response.data);
-      const { results, count } = response.data;
-      setArticles(results || []);  // 确保设置空数组而不是 undefined
-      setPageCount(Math.ceil(count / 10));
+      setArticles(response.data.results);
+      setPageCount(Math.ceil(response.data.count / pagination.pageSize));
     } catch (error) {
       setError('Failed to load articles');
       console.error('Error fetching articles:', error);
@@ -93,7 +90,6 @@ export default function ArticleList({ onSelectArticle }) {
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
-    debugTable: true,
   });
 
   useEffect(() => {
