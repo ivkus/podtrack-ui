@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import ArticleUpload from './components/ArticleUpload';
 import ArticleList from './components/ArticleList';
 import ArticleReader from './components/ArticleReader';
@@ -21,58 +20,74 @@ export default function App() {
           English Learning Tool
         </h1>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-center mb-8">
-            <TabsTrigger value="articles">Articles</TabsTrigger>
-            <TabsTrigger value="upload">Upload</TabsTrigger>
-            <TabsTrigger value="reader">Reader</TabsTrigger>
-            <TabsTrigger value="vocabulary">Vocabulary</TabsTrigger>
-          </TabsList>
+        <div className="flex justify-center mb-8">
+          <div className="tabs tabs-boxed bg-white dark:bg-gray-800 shadow-md rounded-full p-2">
+            {[
+              { id: 'articles', label: 'Articles', icon: '📚' },
+              { id: 'upload', label: 'Upload', icon: '⬆️' },
+              { id: 'reader', label: 'Reader', icon: '📖' },
+              { id: 'vocabulary', label: 'Vocabulary', icon: '📝' }
+            ].map(tab => (
+              <a
+                key={tab.id}
+                className={`tab tab-lg transition-all duration-200 ease-in-out mx-2 px-6 py-3 text-lg
+                  hover:bg-gray-100 dark:hover:bg-gray-700
+                  ${activeTab === tab.id 
+                    ? 'tab-active bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground transform scale-105' 
+                    : 'text-gray-600 dark:text-gray-300'
+                  }`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.label}
+              </a>
+            ))}
+          </div>
+        </div>
 
-          <TabsContent value="articles" className="mt-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <ArticleList onSelectArticle={handleArticleSelect} />
-            </div>
-          </TabsContent>
+        {activeTab === 'articles' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <ArticleList onSelectArticle={handleArticleSelect} />
+          </div>
+        )}
 
-          <TabsContent value="upload" className="mt-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <ArticleUpload onSuccess={() => setActiveTab('articles')} />
-            </div>
-          </TabsContent>
+        {activeTab === 'upload' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <ArticleUpload onSuccess={() => setActiveTab('articles')} />
+          </div>
+        )}
 
-          <TabsContent value="reader" className="mt-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              {selectedArticleId ? (
-                <>
-                  <button 
-                    className="btn btn-outline mb-4"
-                    onClick={() => setActiveTab('articles')}
-                  >
-                    ← Back to Articles
-                  </button>
-                  <ArticleReader articleId={selectedArticleId} />
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-600 dark:text-gray-400">Please select an article to read</p>
-                  <button
-                    className="btn btn-primary mt-4"
-                    onClick={() => setActiveTab('articles')}
-                  >
-                    Browse Articles
-                  </button>
-                </div>
-              )}
-            </div>
-          </TabsContent>
+        {activeTab === 'reader' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            {selectedArticleId ? (
+              <>
+                <button 
+                  className="btn btn-outline mb-4"
+                  onClick={() => setActiveTab('articles')}
+                >
+                  ← Back to Articles
+                </button>
+                <ArticleReader articleId={selectedArticleId} />
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">Please select an article to read</p>
+                <button
+                  className="btn btn-primary mt-4"
+                  onClick={() => setActiveTab('articles')}
+                >
+                  Browse Articles
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
-          <TabsContent value="vocabulary" className="mt-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <VocabularyList />
-            </div>
-          </TabsContent>
-        </Tabs>
+        {activeTab === 'vocabulary' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <VocabularyList />
+          </div>
+        )}
       </div>
     </div>
   );
