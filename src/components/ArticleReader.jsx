@@ -50,32 +50,24 @@ export default function ArticleReader({ articleId }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="card bg-base-100 shadow-xl">
-        <div className="card-body">
-          <h1 className="card-title text-3xl mb-8 text-base-content">{article.title}</h1>
-          <div className="space-y-6">
-            {article.sentences.map((sentence, index) => (
-              <div key={index} className="group">
-                <p className="text-lg leading-relaxed text-base-content">
-                  {sentence.content}
-                </p>
-                {sentence.words && sentence.words.length > 0 && (
-                  <div className="bg-base-200 mt-2 p-2">
-                    <div className="flex flex-wrap gap-2">
-                      {sentence.words.map((word, idx) => (
-                        <span key={idx} className="badge badge-primary">
-                          {word.lemma}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="card bg-base-100 shadow-xl max-w-6xl mx-auto p-8">
+      <h1 className="card-title text-3xl mb-8 text-base-content">{article.title}</h1>
+      {article.sentences.map((sentence, index) => (
+        <React.Fragment key={index}>
+          <p className="text-lg leading-relaxed text-base-content mb-2">
+            {sentence.content}
+          </p>
+          {sentence.words && sentence.words.length > 0 && (
+            <div className="bg-base-200 p-2 flex flex-wrap gap-2 mb-6">
+              {sentence.words.map((word, idx) => (
+                <span key={idx} className="badge badge-primary">
+                  {word.lemma}
+                </span>
+              ))}
+            </div>
+          )}
+        </React.Fragment>
+      ))}
     </div>
   );
 }

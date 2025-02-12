@@ -60,10 +60,11 @@ export default function VocabularyList() {
     },
     {
       id: 'actions',
+      header: () => <div className="text-center">Actions</div>,
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-end">
           <button
-            className={`btn btn-sm ${
+            className={`btn btn-sm w-40 ${
               row.original.mastered 
                 ? 'btn-primary' 
                 : 'btn-outline btn-primary'
@@ -74,7 +75,7 @@ export default function VocabularyList() {
             {row.original.mastered ? 'Mastered' : 'Mark as Mastered'}
           </button>
           <button
-            className={`btn btn-sm ${
+            className={`btn btn-sm w-40 ${
               row.original.ignored 
                 ? 'btn-error' 
                 : 'btn-outline btn-error'

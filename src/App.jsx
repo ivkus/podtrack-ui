@@ -52,29 +52,19 @@ export default function App() {
             )}
 
             {activeTab === 'reader' && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                {selectedArticleId ? (
-                  <>
-                    {/* <button 
-                      className="btn btn-outline mb-4"
-                      onClick={() => setActiveTab('articles')}
-                    >
-                      ← Back to Articles
-                    </button> */}
-                    <ArticleReader articleId={selectedArticleId} />
-                  </>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600 dark:text-gray-400">Please select an article to read</p>
-                    <button
-                      className="btn btn-primary mt-4"
-                      onClick={() => setActiveTab('articles')}
-                    >
-                      Browse Articles
-                    </button>
-                  </div>
-                )}
-              </div>
+              selectedArticleId ? (
+                <ArticleReader articleId={selectedArticleId} />
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-600 dark:text-gray-400">Please select an article to read</p>
+                  <button
+                    className="btn btn-primary mt-4"
+                    onClick={() => setActiveTab('articles')}
+                  >
+                    Browse Articles
+                  </button>
+                </div>
+              )
             )}
 
             {activeTab === 'vocabulary' && (
