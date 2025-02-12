@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { articlesApi } from '../services/api';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
-import { Upload, AlertCircle } from 'lucide-react';
+import { Upload, AlertCircle, X } from 'lucide-react';
 
-export default function ArticleUpload({ onSuccess }) {
+export default function ArticleUpload({ onSuccess, onCancel }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +20,11 @@ export default function ArticleUpload({ onSuccess }) {
       // Read file content
       const reader = new FileReader();
       reader.onload = (e) => {
-        setContent(e.target.result);
+        // Limit content to first 200 words
+        const fullContent = e.target.result;
+        const words = fullContent.split(/\s+/);
+        const truncatedContent = words.slice(0, 200).join(' ');
+        setContent(truncatedContent + (words.length > 200 ? '...' : ''));
       };
       reader.readAsText(selectedFile);
     }
@@ -50,73 +51,88 @@ export default function ArticleUpload({ onSuccess }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="rounded-lg border bg-card p-6 shadow-sm">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Select File
-            </label>
-            <Input
+    <div className="relative">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-2xl font-bold">Upload Article</h3>
+        <button 
+          className="btn btn-ghost btn-sm"
+          onClick={onCancel}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-medium">Select File</span>
+          </label>
+          <div className="relative">
+            <input
               type="file"
               onChange={handleFileChange}
               accept=".txt"
-              className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+              className="file-input file-input-bordered w-full hover:file-input-primary transition-colors duration-200"
             />
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Article Title
-            </label>
-            <Input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter article title"
-              required
-            />
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-medium">Article Title</span>
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter article title"
+            className="input input-bordered w-full focus:input-primary transition-colors duration-200"
+            required
+          />
+        </div>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-medium">Content Preview (First 200 words)</span>
+          </label>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="File content will appear here..."
+            className="textarea textarea-bordered h-[200px] resize-none focus:textarea-primary transition-colors duration-200"
+            required
+          />
+        </div>
+
+        {error && (
+          <div className="alert alert-error shadow-lg">
+            <AlertCircle className="h-5 w-5" />
+            <span className="font-medium">{error}</span>
           </div>
+        )}
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Content
-            </label>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="File content will appear here..."
-              className="min-h-[300px] resize-y"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="rounded-lg bg-destructive/15 text-destructive px-4 py-3 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
-
-          <Button
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
             type="submit"
-            className="w-full"
+            className={`btn btn-primary ${loading ? 'loading' : ''}`}
             disabled={loading}
           >
-            {loading ? (
+            {loading ? 'Uploading...' : (
               <>
-                <span className="animate-spin mr-2">⭘</span>
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="h-4 w-4 mr-2" />
                 Upload Article
               </>
             )}
-          </Button>
-        </form>
-      </div>
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

@@ -7,8 +7,6 @@ import {
   getPaginationRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { vocabularyApi } from '../services/api';
 import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
 
@@ -64,23 +62,28 @@ export default function VocabularyList() {
       id: 'actions',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Button
-            variant={row.original.mastered ? "default" : "outline"}
-            size="sm"
+          <button
+            className={`btn btn-sm ${
+              row.original.mastered 
+                ? 'btn-primary' 
+                : 'btn-outline btn-primary'
+            }`}
             onClick={() => handleToggleMastered(row.original.id)}
-            className={row.original.mastered ? "bg-green-500 hover:bg-green-600" : ""}
           >
             <CheckCircle className="w-4 h-4 mr-1" />
             {row.original.mastered ? 'Mastered' : 'Mark as Mastered'}
-          </Button>
-          <Button
-            variant={row.original.ignored ? "destructive" : "outline"}
-            size="sm"
+          </button>
+          <button
+            className={`btn btn-sm ${
+              row.original.ignored 
+                ? 'btn-error' 
+                : 'btn-outline btn-error'
+            }`}
             onClick={() => handleToggleIgnored(row.original.id)}
           >
             <XCircle className="w-4 h-4 mr-1" />
             {row.original.ignored ? 'Ignored' : 'Ignore'}
-          </Button>
+          </button>
         </div>
       ),
     },
@@ -173,71 +176,68 @@ export default function VocabularyList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="relative w-72">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-base-content/50 h-4 w-4" />
+          <input
+            type="text"
             value={globalFilter ?? ''}
             onChange={e => setGlobalFilter(e.target.value)}
-            className="pl-9"
+            className="input input-bordered w-full pl-9"
             placeholder="Search words..."
           />
         </div>
       </div>
 
-      <div className="rounded-lg border">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id} className="border-b bg-muted/50">
-                  {headerGroup.headers.map(header => (
-                    <th key={header.id} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map(row => (
-                <tr key={row.id} className="border-b transition-colors hover:bg-muted/50">
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id} className="p-4">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="overflow-x-auto">
+        <table className="table table-zebra w-full">
+          <thead>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th key={header.id} className="text-left">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map(row => (
+              <tr key={row.id}>
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="p-4">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm opacity-70">
           Page {pagination.pageIndex + 1} of {pageCount}
         </span>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
+        <div className="join">
+          <button
+            className="btn btn-outline join-item"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
+          </button>
+          <button
+            className="btn btn-outline join-item"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
             Next
             <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
+          </button>
         </div>
       </div>
     </div>

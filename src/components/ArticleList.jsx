@@ -4,10 +4,10 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Button } from './ui/button';
 import { articlesApi } from '../services/api';
 import { formatDate } from '../lib/utils';
-import { ChevronLeft, ChevronRight, BookOpen, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BookOpen, Trash2, Upload } from 'lucide-react';
+import ArticleUpload from './ArticleUpload';
 
 export default function ArticleList({ onSelectArticle }) {
   const [articles, setArticles] = useState([]);
@@ -18,6 +18,7 @@ export default function ArticleList({ onSelectArticle }) {
     pageIndex: 0,
     pageSize: 10,
   });
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const columns = [
     {
@@ -43,24 +44,20 @@ export default function ArticleList({ onSelectArticle }) {
       id: 'actions',
       cell: ({ row }) => (
         <div className="flex gap-2 justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            className="btn btn-ghost btn-sm hover:text-primary"
             onClick={() => onSelectArticle(row.original.id)}
-            className="hover:text-primary"
           >
             <BookOpen className="h-4 w-4" />
             <span className="ml-2">Read</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
+          </button>
+          <button
+            className="btn btn-ghost btn-sm hover:text-destructive"
             onClick={() => handleDelete(row.original.id)}
-            className="hover:text-destructive"
           >
             <Trash2 className="h-4 w-4" />
             <span className="ml-2">Delete</span>
-          </Button>
+          </button>
         </div>
       ),
     },
@@ -137,63 +134,86 @@ export default function ArticleList({ onSelectArticle }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id} className="border-b bg-muted/50">
-                  {headerGroup.headers.map(header => (
-                    <th key={header.id} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map(row => (
-                <tr key={row.id} className="border-b transition-colors hover:bg-muted/50">
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id} className="p-4">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Articles</h2>
+        <button
+          className="btn btn-primary"
+          onClick={() => setShowUploadModal(true)}
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          Upload Article
+        </button>
+      </div>
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <dialog className="modal modal-open">
+          <div className="modal-box w-11/12 max-w-2xl">
+            <ArticleUpload 
+              onSuccess={() => {
+                setShowUploadModal(false);
+                fetchArticles({ pageIndex: pagination.pageIndex });
+              }}
+              onCancel={() => setShowUploadModal(false)}
+            />
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowUploadModal(false)}>close</button>
+          </form>
+        </dialog>
+      )}
+
+      <div className="overflow-x-auto">
+        <table className="table table-zebra w-full">
+          <thead>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th key={header.id} className="text-left">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map(row => (
+              <tr key={row.id}>
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="p-4">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       <div className="flex items-center justify-between px-2">
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-base-content/70">
           Page {pagination.pageIndex + 1} of {pageCount}
         </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
+        <div className="join">
+          <button
+            className="btn btn-outline join-item"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="h-8 w-8 p-0"
           >
             <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
+          </button>
+          <button
+            className="btn btn-outline join-item"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="h-8 w-8 p-0"
           >
             <ChevronRight className="h-4 w-4" />
-          </Button>
+          </button>
         </div>
       </div>
     </div>
