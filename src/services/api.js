@@ -51,6 +51,14 @@ export const articlesApi = {
    * @returns {Promise}
    */
   delete: (id) => api.delete(`/articles/${id}/`),
+
+  uploadArticle(formData) {
+    return api.post('/articles/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
 
 // API endpoints for vocabulary

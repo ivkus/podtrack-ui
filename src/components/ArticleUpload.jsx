@@ -4,31 +4,10 @@ import { Upload, AlertCircle, X } from 'lucide-react';
 
 export default function ArticleUpload({ onSuccess, onCancel }) {
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [textFile, setTextFile] = useState(null);
+  const [audioFile, setAudioFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [file, setFile] = useState(null);
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      // Use filename (without extension) as default title
-      const fileName = selectedFile.name.replace(/\.[^/.]+$/, "");
-      setTitle(fileName);
-
-      // Read file content
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        // Limit content to first 200 words
-        const fullContent = e.target.result;
-        const words = fullContent.split(/\s+/);
-        const truncatedContent = words.slice(0, 200).join(' ');
-        setContent(truncatedContent + (words.length > 200 ? '...' : ''));
-      };
-      reader.readAsText(selectedFile);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,11 +15,16 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
     setError('');
 
     try {
-      const response = await articlesApi.create({ title, content });
-      await articlesApi.analyze(response.data.id);
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('textFile', textFile);
+      formData.append('audioFile', audioFile);
+
+      await articlesApi.uploadArticle(formData);
+      
       setTitle('');
-      setContent('');
-      setFile(null);
+      setTextFile(null);
+      setAudioFile(null);
       if (onSuccess) onSuccess();
     } catch (error) {
       setError('Failed to upload article. Please try again.');
@@ -54,29 +38,17 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
     <div className="relative">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-2xl font-bold">Upload Article</h3>
-        <button 
-          className="btn btn-ghost btn-sm"
-          onClick={onCancel}
-        >
-          <X className="h-4 w-4" />
-        </button>
+        {onCancel && (
+          <button 
+            className="btn btn-ghost btn-sm"
+            onClick={onCancel}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-medium">Select File</span>
-          </label>
-          <div className="relative">
-            <input
-              type="file"
-              onChange={handleFileChange}
-              accept=".txt"
-              className="file-input file-input-bordered w-full hover:file-input-primary transition-colors duration-200"
-            />
-          </div>
-        </div>
-
         <div className="form-control">
           <label className="label">
             <span className="label-text font-medium">Article Title</span>
@@ -93,13 +65,26 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
 
         <div className="form-control">
           <label className="label">
-            <span className="label-text font-medium">Content Preview (First 200 words)</span>
+            <span className="label-text font-medium">Text File (TXT)</span>
           </label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="File content will appear here..."
-            className="textarea textarea-bordered h-[200px] resize-none focus:textarea-primary transition-colors duration-200"
+          <input
+            type="file"
+            onChange={(e) => setTextFile(e.target.files[0])}
+            accept=".txt"
+            className="file-input file-input-bordered w-full hover:file-input-primary transition-colors duration-200"
+            required
+          />
+        </div>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-medium">Audio File</span>
+          </label>
+          <input
+            type="file"
+            onChange={(e) => setAudioFile(e.target.files[0])}
+            accept="audio/*"
+            className="file-input file-input-bordered w-full hover:file-input-primary transition-colors duration-200"
             required
           />
         </div>
@@ -112,13 +97,15 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
         )}
 
         <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={onCancel}
-          >
-            Cancel
-          </button>
+          {onCancel && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={onCancel}
+            >
+              Cancel
+            </button>
+          )}
           <button
             type="submit"
             className={`btn btn-primary ${loading ? 'loading' : ''}`}
