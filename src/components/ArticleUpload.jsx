@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import { articlesApi } from '../services/api';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { Card } from './ui/card';
-import { articlesApi } from '../services/api';
+import { Upload, AlertCircle } from 'lucide-react';
 
 export default function ArticleUpload({ onSuccess }) {
   const [title, setTitle] = useState('');
@@ -50,48 +50,73 @@ export default function ArticleUpload({ onSuccess }) {
   };
 
   return (
-    <Card className="max-w-2xl mx-auto p-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Select File</label>
-          <Input
-            type="file"
-            onChange={handleFileChange}
-            accept=".txt"
-            className="mb-4"
-          />
-        </div>
+    <div className="max-w-2xl mx-auto">
+      <div className="rounded-lg border bg-card p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Select File
+            </label>
+            <Input
+              type="file"
+              onChange={handleFileChange}
+              accept=".txt"
+              className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Article Title</label>
-          <Input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter article title"
-            required
-          />
-        </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Article Title
+            </label>
+            <Input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter article title"
+              required
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Article Content</label>
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="File content will appear here..."
-            className="h-64"
-            required
-          />
-        </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Content
+            </label>
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="File content will appear here..."
+              className="min-h-[300px] resize-y"
+              required
+            />
+          </div>
 
-        {error && (
-          <p className="text-red-500 text-sm">{error}</p>
-        )}
+          {error && (
+            <div className="rounded-lg bg-destructive/15 text-destructive px-4 py-3 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
 
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? 'Uploading and Analyzing...' : 'Upload Article'}
-        </Button>
-      </form>
-    </Card>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="animate-spin mr-2">⭘</span>
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Article
+              </>
+            )}
+          </Button>
+        </form>
+      </div>
+    </div>
   );
 }

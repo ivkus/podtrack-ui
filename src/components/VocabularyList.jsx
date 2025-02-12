@@ -10,6 +10,7 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { vocabularyApi } from '../services/api';
+import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
 
 export default function VocabularyList() {
   const [vocabulary, setVocabulary] = useState([]);
@@ -26,18 +27,35 @@ export default function VocabularyList() {
     {
       accessorKey: 'word.lemma',
       header: 'Word',
-      cell: info => <div className="font-medium">{info.getValue()}</div>,
+      cell: info => (
+        <div className="font-medium text-primary">
+          {info.getValue()}
+        </div>
+      ),
     },
     {
       accessorKey: 'word.article_count',
       header: 'Articles',
-      cell: info => info.getValue(),
+      cell: info => (
+        <div className="text-muted-foreground">
+          {info.getValue()}
+        </div>
+      ),
     },
     {
       accessorFn: row => row.mastered ? 'Mastered' : 'Learning',
       header: 'Status',
       cell: info => (
-        <div className={`text-sm ${info.getValue() === 'Mastered' ? 'text-green-600' : 'text-blue-600'}`}>
+        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          info.getValue() === 'Mastered' 
+            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+            : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+        }`}>
+          {info.getValue() === 'Mastered' ? (
+            <CheckCircle className="w-3 h-3 mr-1" />
+          ) : (
+            <div className="w-2 h-2 rounded-full bg-current mr-1" />
+          )}
           {info.getValue()}
         </div>
       ),
@@ -45,12 +63,14 @@ export default function VocabularyList() {
     {
       id: 'actions',
       cell: ({ row }) => (
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Button
             variant={row.original.mastered ? "default" : "outline"}
             size="sm"
             onClick={() => handleToggleMastered(row.original.id)}
+            className={row.original.mastered ? "bg-green-500 hover:bg-green-600" : ""}
           >
+            <CheckCircle className="w-4 h-4 mr-1" />
             {row.original.mastered ? 'Mastered' : 'Mark as Mastered'}
           </Button>
           <Button
@@ -58,6 +78,7 @@ export default function VocabularyList() {
             size="sm"
             onClick={() => handleToggleIgnored(row.original.id)}
           >
+            <XCircle className="w-4 h-4 mr-1" />
             {row.original.ignored ? 'Ignored' : 'Ignore'}
           </Button>
         </div>
@@ -149,89 +170,75 @@ export default function VocabularyList() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <Input
-          placeholder="Search words..."
-          value={globalFilter}
-          onChange={e => setGlobalFilter(e.target.value)}
-          className="max-w-xs"
-        />
-        <div className="flex gap-2">
-          <Button
-            variant={table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Mastered' ? 'default' : 'outline'}
-            onClick={() => table.getHeaderGroups()[0].headers[2].column.setFilterValue('Mastered')}
-          >
-            Mastered
-          </Button>
-          <Button
-            variant={table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Learning' ? 'default' : 'outline'}
-            onClick={() => table.getHeaderGroups()[0].headers[2].column.setFilterValue('Learning')}
-          >
-            Learning
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="relative w-72">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            value={globalFilter ?? ''}
+            onChange={e => setGlobalFilter(e.target.value)}
+            className="pl-9"
+            placeholder="Search words..."
+          />
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map(cell => (
-                  <td
-                    key={cell.id}
-                    className="px-6 py-4 whitespace-nowrap"
-                  >
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="rounded-lg border">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id} className="border-b bg-muted/50">
+                  {headerGroup.headers.map(header => (
+                    <th key={header.id} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map(row => (
+                <tr key={row.id} className="border-b transition-colors hover:bg-muted/50">
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className="p-4">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground">
+          Page {pagination.pageIndex + 1} of {pageCount}
+        </span>
+        <div className="flex items-center space-x-2">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
+            <ChevronLeft className="h-4 w-4 mr-1" />
             Previous
           </Button>
           <Button
             variant="outline"
+            size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
             Next
+            <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
-        <span className="text-sm text-gray-700">
-          Page {pagination.pageIndex + 1} of {pageCount}
-        </span>
       </div>
     </div>
   );

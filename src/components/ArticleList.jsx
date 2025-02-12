@@ -7,6 +7,7 @@ import {
 import { Button } from './ui/button';
 import { articlesApi } from '../services/api';
 import { formatDate } from '../lib/utils';
+import { ChevronLeft, ChevronRight, BookOpen, Trash2 } from 'lucide-react';
 
 export default function ArticleList({ onSelectArticle }) {
   const [articles, setArticles] = useState([]);
@@ -22,30 +23,43 @@ export default function ArticleList({ onSelectArticle }) {
     {
       accessorKey: 'title',
       header: 'Title',
-      cell: info => <div className="font-medium">{info.getValue()}</div>,
+      cell: info => (
+        <div className="font-medium hover:text-primary cursor-pointer"
+             onClick={() => onSelectArticle(info.row.original.id)}>
+          {info.getValue()}
+        </div>
+      ),
     },
     {
       accessorKey: 'created_at',
       header: 'Created At',
-      cell: info => formatDate(info.getValue()),
+      cell: info => (
+        <div className="text-muted-foreground">
+          {formatDate(info.getValue())}
+        </div>
+      ),
     },
     {
       id: 'actions',
       cell: ({ row }) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-end">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => onSelectArticle(row.original.id)}
+            className="hover:text-primary"
           >
-            Read
+            <BookOpen className="h-4 w-4" />
+            <span className="ml-2">Read</span>
           </Button>
           <Button
-            variant="destructive"
+            variant="ghost"
             size="sm"
             onClick={() => handleDelete(row.original.id)}
+            className="hover:text-destructive"
           >
-            Delete
+            <Trash2 className="h-4 w-4" />
+            <span className="ml-2">Delete</span>
           </Button>
         </div>
       ),
@@ -67,13 +81,12 @@ export default function ArticleList({ onSelectArticle }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this article?')) {
+    if (!window.confirm('Are you sure you want to delete this article?')) {
       return;
     }
 
     try {
       await articlesApi.delete(id);
-      // 重新获取当前页数据
       fetchArticles({ pageIndex: pagination.pageIndex });
     } catch (error) {
       console.error('Error deleting article:', error);
@@ -98,16 +111,23 @@ export default function ArticleList({ onSelectArticle }) {
 
   if (loading && articles.length === 0) {
     return (
-      <div className="text-center py-8">
-        Loading articles...
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-8 text-red-500">
-        {error}
+      <div className="rounded-lg bg-destructive/10 text-destructive p-4 my-4">
+        <div className="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span className="font-medium">{error}</span>
+        </div>
       </div>
     );
   }
@@ -117,65 +137,64 @@ export default function ArticleList({ onSelectArticle }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map(cell => (
-                  <td
-                    key={cell.id}
-                    className="px-6 py-4 whitespace-nowrap"
-                  >
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="rounded-lg border">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id} className="border-b bg-muted/50">
+                  {headerGroup.headers.map(header => (
+                    <th key={header.id} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map(row => (
+                <tr key={row.id} className="border-b transition-colors hover:bg-muted/50">
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className="p-4">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-2">
+        <div className="text-sm text-muted-foreground">
+          Page {pagination.pageIndex + 1} of {pageCount}
+        </div>
+        <div className="flex items-center space-x-2">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            className="h-8 w-8 p-0"
           >
-            Previous
+            <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
+            size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            className="h-8 w-8 p-0"
           >
-            Next
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <span className="text-sm text-gray-700">
-          Page {pagination.pageIndex + 1} of {pageCount}
-        </span>
       </div>
     </div>
   );
