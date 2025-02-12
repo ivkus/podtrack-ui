@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:30000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -13,11 +13,15 @@ const api = axios.create({
 // API endpoints for articles
 export const articlesApi = {
   /**
-   * Get all articles
-   * @returns {Promise<Array>} Array of articles
+   * Get all articles with pagination
+   * @param {number} page Page number (starts from 1)
+   * @returns {Promise<Object>} Paginated articles data
    */
-  getAll: () => api.get('/articles/'),
-
+  getAll: (page = 1) => api.get('/articles/', {
+    params: {
+      page
+    }
+  }),
   /**
    * Get a single article by ID
    * @param {string|number} id Article ID
@@ -52,10 +56,14 @@ export const articlesApi = {
 // API endpoints for vocabulary
 export const vocabularyApi = {
   /**
-   * Get all vocabulary items
-   * @returns {Promise<Array>} Array of vocabulary items
+   * Get all vocabulary items with filtering and pagination
+   * @param {URLSearchParams} params Query parameters for filtering and pagination
+   * @param {number} [params.page] Page number (starts from 1)
+   * @param {boolean} [params.mastered] Filter by mastered status
+   * @param {boolean} [params.ignored] Filter by ignored status
+   * @returns {Promise<Object>} Paginated vocabulary items
    */
-  getAll: () => api.get('/vocabulary/'),
+  getAll: (params) => api.get(`/vocabulary/?${params.toString()}`),
 
   /**
    * Update a vocabulary item
