@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -6,8 +6,55 @@ import {
 } from '@tanstack/react-table';
 import { articlesApi } from '../services/api';
 import { formatDate } from '../lib/utils';
-import { ChevronLeft, ChevronRight, BookOpen, Trash2, Upload } from 'lucide-react';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  BookOpen, 
+  Trash2, 
+  Upload,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+} from 'lucide-react';
 import ArticleUpload from './ArticleUpload';
+
+// 定义轮询间隔（毫秒）
+const POLL_INTERVAL = 5000;
+
+// 处理状态显示组件
+const ProcessingStatus = ({ status }) => {
+  const statusConfig = {
+    pending: {
+      icon: <Loader2 className="h-4 w-4 animate-spin" />,
+      text: "Pending",
+      className: "bg-yellow-100 text-yellow-800",
+    },
+    processing: {
+      icon: <Loader2 className="h-4 w-4 animate-spin" />,
+      text: "Processing",
+      className: "bg-blue-100 text-blue-800",
+    },
+    completed: {
+      icon: <CheckCircle className="h-4 w-4" />,
+      text: "Completed",
+      className: "bg-green-100 text-green-800",
+    },
+    failed: {
+      icon: <AlertCircle className="h-4 w-4" />,
+      text: "Failed",
+      className: "bg-red-100 text-red-800",
+    },
+  };
+
+  const config = statusConfig[status] || statusConfig.pending;
+
+  return (
+    <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${config.className}`}>
+      {config.icon}
+      <span className="ml-1.5">{config.text}</span>
+    </div>
+  );
+};
 
 export default function ArticleList({ onSelectArticle }) {
   const [articles, setArticles] = useState([]);
@@ -32,6 +79,11 @@ export default function ArticleList({ onSelectArticle }) {
       ),
     },
     {
+      accessorKey: 'processing_status',
+      header: 'Status',
+      cell: info => <ProcessingStatus status={info.getValue()} />,
+    },
+    {
       accessorKey: 'created_at',
       header: 'Created At',
       cell: info => (
@@ -42,40 +94,77 @@ export default function ArticleList({ onSelectArticle }) {
     },
     {
       id: 'actions',
-      cell: ({ row }) => (
-        <div className="flex gap-2 justify-end">
-          <button
-            className="btn btn-ghost btn-sm hover:text-primary"
-            onClick={() => onSelectArticle(row.original.id)}
-          >
-            <BookOpen className="h-4 w-4" />
-            <span className="ml-2">Read</span>
-          </button>
-          <button
-            className="btn btn-ghost btn-sm hover:text-destructive"
-            onClick={() => handleDelete(row.original.id)}
-          >
-            <Trash2 className="h-4 w-4" />
-            <span className="ml-2">Delete</span>
-          </button>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const isProcessing = ['pending', 'processing'].includes(row.original.processing_status);
+        
+        return (
+          <div className="flex gap-2 justify-end">
+            <button
+              className="btn btn-ghost btn-sm hover:text-primary"
+              onClick={() => onSelectArticle(row.original.id)}
+              disabled={isProcessing}
+            >
+              <BookOpen className="h-4 w-4" />
+              <span className="ml-2">Read</span>
+            </button>
+            <button
+              className="btn btn-ghost btn-sm hover:text-destructive"
+              onClick={() => handleDelete(row.original.id)}
+              disabled={isProcessing}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="ml-2">Delete</span>
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
-  const fetchArticles = async ({ pageIndex }) => {
+  const fetchArticles = useCallback(async ({ pageIndex }) => {
     try {
       setLoading(true);
       const response = await articlesApi.getAll(pageIndex + 1);
       setArticles(response.data.results);
       setPageCount(Math.ceil(response.data.count / pagination.pageSize));
+      
+      // 返回是否需要继续轮询
+      return response.data.results.some(article => 
+        ['pending', 'processing'].includes(article.processing_status)
+      );
     } catch (error) {
       setError('Failed to load articles');
       console.error('Error fetching articles:', error);
+      return false;
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.pageSize]);
+
+  useEffect(() => {
+    let pollInterval;
+    
+    const startPolling = async () => {
+      const shouldContinuePolling = await fetchArticles({ pageIndex: pagination.pageIndex });
+      
+      if (shouldContinuePolling) {
+        pollInterval = setInterval(async () => {
+          const shouldContinue = await fetchArticles({ pageIndex: pagination.pageIndex });
+          if (!shouldContinue && pollInterval) {
+            clearInterval(pollInterval);
+          }
+        }, POLL_INTERVAL);
+      }
+    };
+
+    startPolling();
+
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [pagination.pageIndex, fetchArticles]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this article?')) {
@@ -101,10 +190,6 @@ export default function ArticleList({ onSelectArticle }) {
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
   });
-
-  useEffect(() => {
-    fetchArticles({ pageIndex: pagination.pageIndex });
-  }, [pagination.pageIndex]);
 
   if (loading && articles.length === 0) {
     return (
@@ -183,7 +268,11 @@ export default function ArticleList({ onSelectArticle }) {
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr key={row.id}>
+              <tr key={row.id} className={
+                ['pending', 'processing'].includes(row.original.processing_status)
+                  ? 'opacity-70'
+                  : ''
+              }>
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="p-4">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
