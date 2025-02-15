@@ -54,9 +54,16 @@ export default function ArticleReader({ articleId }) {
       <h1 className="card-title text-3xl mb-8 text-base-content">{article.title}</h1>
       {article.sentences.map((sentence, index) => (
         <React.Fragment key={index}>
-          <p className="text-lg leading-relaxed text-base-content mb-2">
-            {sentence.content}
-          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <p className="text-lg leading-relaxed text-base-content flex-grow">
+              {sentence.content}
+            </p>
+            {sentence.start_time != null && sentence.end_time != null && (
+              <span className="text-sm text-base-content/60 whitespace-nowrap">
+                {sentence.start_time.toFixed(1)}s - {sentence.end_time.toFixed(1)}s
+              </span>
+            )}
+          </div>
           {sentence.words && sentence.words.length > 0 && (
             <div className="bg-base-200 p-2 flex flex-wrap gap-2 mb-6">
               {sentence.words.map((word, idx) => (

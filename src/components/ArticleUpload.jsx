@@ -4,7 +4,6 @@ import { Upload, AlertCircle, X } from 'lucide-react';
 
 export default function ArticleUpload({ onSuccess, onCancel }) {
   const [title, setTitle] = useState('');
-  const [textFile, setTextFile] = useState(null);
   const [audioFile, setAudioFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,13 +16,11 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
     try {
       const formData = new FormData();
       formData.append('title', title);
-      formData.append('textFile', textFile);
       formData.append('audioFile', audioFile);
 
       await articlesApi.uploadArticle(formData);
       
       setTitle('');
-      setTextFile(null);
       setAudioFile(null);
       if (onSuccess) onSuccess();
     } catch (error) {
@@ -58,20 +55,7 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter article title"
-            className="input input-bordered w-full focus:input-primary transition-colors duration-200"
-            required
-          />
-        </div>
-
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-medium">Text File (TXT)</span>
-          </label>
-          <input
-            type="file"
-            onChange={(e) => setTextFile(e.target.files[0])}
-            accept=".txt"
-            className="file-input file-input-bordered w-full hover:file-input-primary transition-colors duration-200"
+            className="input input-bordered w-full focus:input-primary"
             required
           />
         </div>
@@ -84,7 +68,7 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
             type="file"
             onChange={(e) => setAudioFile(e.target.files[0])}
             accept="audio/*"
-            className="file-input file-input-bordered w-full hover:file-input-primary transition-colors duration-200"
+            className="file-input file-input-bordered w-full hover:file-input-primary"
             required
           />
         </div>
@@ -92,7 +76,7 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
         {error && (
           <div className="alert alert-error shadow-lg">
             <AlertCircle className="h-5 w-5" />
-            <span className="font-medium">{error}</span>
+            <span>{error}</span>
           </div>
         )}
 
@@ -111,7 +95,7 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
             className={`btn btn-primary ${loading ? 'loading' : ''}`}
             disabled={loading}
           >
-            {loading ? 'Uploading...' : (
+            {loading ? 'Uploading & Processing...' : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
                 Upload Article

@@ -17,7 +17,7 @@ export default function App() {
     <div className="min-h-screen bg-base-200">
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         <h1 className="text-4xl font-bold mb-8 text-center text-base-content">
-          English Learning Tool
+          PodTrack
         </h1>
         
         <div className="flex justify-center mb-8">
