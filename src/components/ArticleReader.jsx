@@ -32,6 +32,16 @@ export default function ArticleReader({ articleId }) {
     if (audioRef.current) {
       audioRef.current.currentTime = sentence.start_time;
       audioRef.current.play();
+
+      // 设置定时器在结束时间停止播放
+      const stopPlayback = () => {
+        audioRef.current.pause();
+        audioRef.current.currentTime = sentence.start_time; // 可选：重置到开始时间
+      };
+
+      // 计算播放持续时间并设置定时器
+      const duration = (sentence.end_time - sentence.start_time) * 1000; // 转换为毫秒
+      setTimeout(stopPlayback, duration);
     }
   };
 
