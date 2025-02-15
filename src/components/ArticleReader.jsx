@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { articlesApi } from '../services/api';
 import { AlertCircle, ChevronDown, Book, FileQuestion } from 'lucide-react';
 
@@ -6,6 +6,7 @@ export default function ArticleReader({ articleId }) {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const audioRef = useRef(null);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -26,6 +27,13 @@ export default function ArticleReader({ articleId }) {
 
     fetchArticle();
   }, [articleId]);
+
+  const handleSentenceClick = (sentence) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = sentence.start_time;
+      audioRef.current.play();
+    }
+  };
 
   if (loading) {
     return (
@@ -58,10 +66,11 @@ export default function ArticleReader({ articleId }) {
 
   return (
     <div className="card bg-base-100 shadow-xl max-w-6xl mx-auto p-8">
+      <audio ref={audioRef} src={article.audio_file} />
       <h1 className="card-title text-3xl mb-8 text-base-content">{article.title}</h1>
       {article.sentences.map((sentence, index) => (
         <React.Fragment key={index}>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2" onClick={() => handleSentenceClick(sentence)}>
             <p className="text-lg leading-relaxed text-base-content flex-grow">
               {sentence.content}
             </p>
