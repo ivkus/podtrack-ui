@@ -1,5 +1,5 @@
 // src/components/VocabularyList.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -147,6 +147,43 @@ export default function VocabularyList() {
     }
   };
 
+  const table = useReactTable({
+    data: vocabulary,
+    columns,
+    pageCount: pageCount,
+    state: {
+      pagination,
+      globalFilter,
+    },
+    onPaginationChange: setPagination,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    manualPagination: true,
+    manualFiltering: true,
+    debugTable: true,
+  });
+
+  const fetchVocabulary = useCallback(async ({ pageIndex }) => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({ 
+        page: pageIndex + 1,
+        ...(table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Mastered' && { mastered: true }),
+        ...(table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Learning' && { mastered: false })
+      });
+      const response = await vocabularyApi.getAll(params);
+      const { results, count } = response.data;
+      setVocabulary(results || []);
+      setPageCount(Math.ceil(count / 10));
+    } catch (error) {
+      setError('Failed to load vocabulary');
+      console.error('Error fetching vocabulary:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [table]);
+
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this vocabulary item?')) {
       return;
@@ -154,7 +191,7 @@ export default function VocabularyList() {
 
     try {
       await vocabularyApi.delete(id);
-      setVocabulary(vocabulary.filter(item => item.id !== id));
+      await fetchVocabulary({ pageIndex: pagination.pageIndex });
     } catch (error) {
       console.error('Error deleting vocabulary item:', error);
     }
@@ -173,55 +210,18 @@ export default function VocabularyList() {
 
     try {
       await vocabularyApi.bulkDelete(selectedIds);
-      setVocabulary(vocabulary.filter(item => !selectedIds.includes(item.id)));
       table.resetRowSelection();
+      await fetchVocabulary({ pageIndex: pagination.pageIndex });
     } catch (error) {
       console.error('Error bulk deleting vocabulary items:', error);
     }
   };
 
-  const fetchVocabulary = async ({ pageIndex }) => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({ 
-        page: pageIndex + 1,
-        ...(table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Mastered' && { mastered: true }),
-        ...(table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Learning' && { mastered: false })
-      });
-      const response = await vocabularyApi.getAll(params);
-      const { results, count } = response.data;
-      setVocabulary(results || []);
-      setPageCount(Math.ceil(count / 10));
-    } catch (error) {
-      setError('Failed to load vocabulary');
-      console.error('Error fetching vocabulary:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const table = useReactTable({
-    data: vocabulary,
-    columns,
-    pageCount: pageCount,
-    state: {
-      pagination,
-      globalFilter,
-    },
-    onPaginationChange: setPagination,
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    manualPagination: true,
-    manualFiltering: true,
-    debugTable: true,
-  });
-
   useEffect(() => {
     fetchVocabulary({ 
       pageIndex: pagination.pageIndex 
     });
-  }, [pagination.pageIndex, table.getState().columnFilters[2]?.value]);
+  }, [pagination.pageIndex, table.getState().columnFilters[2]?.value, fetchVocabulary]);
 
   if (loading && vocabulary.length === 0) {
     return (
