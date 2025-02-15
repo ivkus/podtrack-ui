@@ -100,6 +100,20 @@ export const vocabularyApi = {
    * @returns {Promise<Object>} Vocabulary statistics
    */
   getStats: () => api.get('/vocabulary/stats/'),
+
+  /**
+   * Delete a vocabulary item
+   * @param {string|number} id Vocabulary item ID
+   * @returns {Promise}
+   */
+  delete: (id) => api.delete(`/vocabulary/${id}/`),
+
+  /**
+   * Bulk delete vocabulary items
+   * @param {Array<string|number>} ids Array of vocabulary item IDs
+   * @returns {Promise}
+   */
+  bulkDelete: (ids) => api.post('/vocabulary/bulk_delete/', { ids }),
 };
 
 // Request interceptor

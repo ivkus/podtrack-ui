@@ -8,12 +8,20 @@ import {
   getFilteredRowModel,
 } from '@tanstack/react-table';
 import { vocabularyApi } from '../services/api';
-import { Search, ChevronLeft, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
+import { 
+  Search, 
+  ChevronLeft, 
+  ChevronRight, 
+  CheckCircle, 
+  XCircle,
+  Trash2,
+} from 'lucide-react';
 
 export default function VocabularyList() {
   const [vocabulary, setVocabulary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedRows, setSelectedRows] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
@@ -22,6 +30,25 @@ export default function VocabularyList() {
   const [globalFilter, setGlobalFilter] = useState('');
 
   const columns = [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <input
+          type="checkbox"
+          className="checkbox"
+          checked={table.getIsAllRowsSelected()}
+          onChange={table.getToggleAllRowsSelectedHandler()}
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          className="checkbox"
+          checked={row.getIsSelected()}
+          onChange={row.getToggleSelectedHandler()}
+        />
+      ),
+    },
     {
       accessorKey: 'word.lemma',
       header: 'Word',
@@ -64,7 +91,7 @@ export default function VocabularyList() {
       cell: ({ row }) => (
         <div className="flex items-center gap-2 justify-end">
           <button
-            className={`btn btn-sm w-40 ${
+            className={`btn btn-sm ${
               row.original.mastered 
                 ? 'btn-primary' 
                 : 'btn-outline btn-primary'
@@ -75,7 +102,7 @@ export default function VocabularyList() {
             {row.original.mastered ? 'Mastered' : 'Mark as Mastered'}
           </button>
           <button
-            className={`btn btn-sm w-40 ${
+            className={`btn btn-sm ${
               row.original.ignored 
                 ? 'btn-error' 
                 : 'btn-outline btn-error'
@@ -84,6 +111,12 @@ export default function VocabularyList() {
           >
             <XCircle className="w-4 h-4 mr-1" />
             {row.original.ignored ? 'Ignored' : 'Ignore'}
+          </button>
+          <button
+            className="btn btn-ghost btn-sm text-error"
+            onClick={() => handleDelete(row.original.id)}
+          >
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       ),
@@ -111,6 +144,39 @@ export default function VocabularyList() {
       setVocabulary(updatedVocabulary);
     } catch (error) {
       console.error('Error toggling ignored status:', error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this vocabulary item?')) {
+      return;
+    }
+
+    try {
+      await vocabularyApi.delete(id);
+      setVocabulary(vocabulary.filter(item => item.id !== id));
+    } catch (error) {
+      console.error('Error deleting vocabulary item:', error);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const selectedIds = table.getSelectedRowModel().rows.map(row => row.original.id);
+    
+    if (!selectedIds.length) {
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} selected items?`)) {
+      return;
+    }
+
+    try {
+      await vocabularyApi.bulkDelete(selectedIds);
+      setVocabulary(vocabulary.filter(item => !selectedIds.includes(item.id)));
+      table.resetRowSelection();
+    } catch (error) {
+      console.error('Error bulk deleting vocabulary items:', error);
     }
   };
 
@@ -186,6 +252,15 @@ export default function VocabularyList() {
             placeholder="Search words..."
           />
         </div>
+        {table.getSelectedRowModel().rows.length > 0 && (
+          <button
+            className="btn btn-error"
+            onClick={handleBulkDelete}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete Selected ({table.getSelectedRowModel().rows.length})
+          </button>
+        )}
       </div>
 
       <div className="overflow-x-auto">
