@@ -30,6 +30,8 @@ export default function VocabularyList() {
     pageSize: 10,
   });
   const [globalFilter, setGlobalFilter] = useState('');
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageInput, setPageInput] = useState('');
 
   const columns = [
     {
@@ -180,6 +182,7 @@ export default function VocabularyList() {
       const { results, count } = response.data;
       setVocabulary(results || []);
       setPageCount(Math.ceil(count / pageSize));
+      setTotalCount(count);
     } catch (error) {
       setError('Failed to load vocabulary');
       console.error('Error fetching vocabulary:', error);
@@ -218,6 +221,15 @@ export default function VocabularyList() {
       await fetchVocabulary({ pageIndex: pagination.pageIndex, pageSize: pagination.pageSize });
     } catch (error) {
       console.error('Error bulk deleting vocabulary items:', error);
+    }
+  };
+
+  const handlePageSubmit = (e) => {
+    e.preventDefault();
+    const pageNumber = parseInt(pageInput);
+    if (pageNumber >= 1 && pageNumber <= pageCount) {
+      table.setPageIndex(pageNumber - 1);
+      setPageInput('');
     }
   };
 
@@ -322,25 +334,46 @@ export default function VocabularyList() {
       <div className="flex items-center justify-between">
         <span className="text-sm opacity-70">
           Page {pagination.pageIndex + 1} of {pageCount} | 
-          Showing {pagination.pageSize} items per page
+          Showing {pagination.pageSize} items per page |
+          Total {totalCount} items
         </span>
-        <div className="join">
-          <button
-            className="btn btn-outline join-item"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Previous
-          </button>
-          <button
-            className="btn btn-outline join-item"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </button>
+        <div className="flex items-center gap-2">
+          <form onSubmit={handlePageSubmit} className="join">
+            <input
+              type="number"
+              min="1"
+              max={pageCount}
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              placeholder="Go to page"
+              className="input input-bordered input-sm w-24 join-item"
+            />
+            <button 
+              type="submit"
+              className="btn btn-sm join-item"
+              disabled={!pageInput || parseInt(pageInput) < 1 || parseInt(pageInput) > pageCount}
+            >
+              Go
+            </button>
+          </form>
+          <div className="join">
+            <button
+              className="btn btn-outline btn-sm join-item"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </button>
+            <button
+              className="btn btn-outline btn-sm join-item"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
