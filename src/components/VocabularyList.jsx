@@ -17,6 +17,8 @@ import {
   Trash2,
 } from 'lucide-react';
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+
 export default function VocabularyList() {
   const [vocabulary, setVocabulary] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -164,18 +166,19 @@ export default function VocabularyList() {
     debugTable: true,
   });
 
-  const fetchVocabulary = useCallback(async ({ pageIndex }) => {
+  const fetchVocabulary = useCallback(async ({ pageIndex, pageSize }) => {
     try {
       setLoading(true);
       const params = new URLSearchParams({ 
         page: pageIndex + 1,
+        page_size: pageSize,
         ...(table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Mastered' && { mastered: true }),
         ...(table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Learning' && { mastered: false })
       });
       const response = await vocabularyApi.getAll(params);
       const { results, count } = response.data;
       setVocabulary(results || []);
-      setPageCount(Math.ceil(count / 10));
+      setPageCount(Math.ceil(count / pageSize));
     } catch (error) {
       setError('Failed to load vocabulary');
       console.error('Error fetching vocabulary:', error);
@@ -191,7 +194,7 @@ export default function VocabularyList() {
 
     try {
       await vocabularyApi.delete(id);
-      await fetchVocabulary({ pageIndex: pagination.pageIndex });
+      await fetchVocabulary({ pageIndex: pagination.pageIndex, pageSize: pagination.pageSize });
     } catch (error) {
       console.error('Error deleting vocabulary item:', error);
     }
@@ -211,7 +214,7 @@ export default function VocabularyList() {
     try {
       await vocabularyApi.bulkDelete(selectedIds);
       table.resetRowSelection();
-      await fetchVocabulary({ pageIndex: pagination.pageIndex });
+      await fetchVocabulary({ pageIndex: pagination.pageIndex, pageSize: pagination.pageSize });
     } catch (error) {
       console.error('Error bulk deleting vocabulary items:', error);
     }
@@ -219,9 +222,15 @@ export default function VocabularyList() {
 
   useEffect(() => {
     fetchVocabulary({ 
-      pageIndex: pagination.pageIndex 
+      pageIndex: pagination.pageIndex,
+      pageSize: pagination.pageSize
     });
-  }, [pagination.pageIndex, table.getState().columnFilters[2]?.value, fetchVocabulary]);
+  }, [
+    pagination.pageIndex, 
+    pagination.pageSize,
+    table.getState().columnFilters[2]?.value, 
+    fetchVocabulary
+  ]);
 
   if (loading && vocabulary.length === 0) {
     return (
@@ -252,15 +261,30 @@ export default function VocabularyList() {
             placeholder="Search words..."
           />
         </div>
-        {table.getSelectedRowModel().rows.length > 0 && (
-          <button
-            className="btn btn-error"
-            onClick={handleBulkDelete}
+        <div className="flex items-center gap-4">
+          <select
+            value={pagination.pageSize}
+            onChange={e => {
+              table.setPageSize(Number(e.target.value));
+            }}
+            className="select select-bordered"
           >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete Selected ({table.getSelectedRowModel().rows.length})
-          </button>
-        )}
+            {PAGE_SIZE_OPTIONS.map(pageSize => (
+              <option key={pageSize} value={pageSize}>
+                Show {pageSize}
+              </option>
+            ))}
+          </select>
+          {table.getSelectedRowModel().rows.length > 0 && (
+            <button
+              className="btn btn-error"
+              onClick={handleBulkDelete}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Selected ({table.getSelectedRowModel().rows.length})
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -295,7 +319,8 @@ export default function VocabularyList() {
 
       <div className="flex items-center justify-between">
         <span className="text-sm opacity-70">
-          Page {pagination.pageIndex + 1} of {pageCount}
+          Page {pagination.pageIndex + 1} of {pageCount} | 
+          Showing {pagination.pageSize} items per page
         </span>
         <div className="join">
           <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { articlesApi } from '../services/api';
-import { AlertCircle, ChevronDown, Book } from 'lucide-react';
+import { AlertCircle, ChevronDown, Book, FileQuestion } from 'lucide-react';
 
 export default function ArticleReader({ articleId }) {
   const [article, setArticle] = useState(null);
@@ -13,8 +13,12 @@ export default function ArticleReader({ articleId }) {
         const response = await articlesApi.get(articleId);
         setArticle(response.data);
       } catch (error) {
-        setError('Failed to load article');
-        console.error('Error fetching article:', error);
+        if (error.response && error.response.status === 404) {
+          setArticle(null);
+        } else {
+          setError('Failed to load article');
+          console.error('Error fetching article:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -31,20 +35,23 @@ export default function ArticleReader({ articleId }) {
     );
   }
 
+  if (!article) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <FileQuestion className="h-16 w-16 text-base-content/50" />
+        <h2 className="text-xl font-semibold text-base-content">Article Not Found</h2>
+        <p className="text-base-content/70">
+          The article you're looking for doesn't exist or has been removed.
+        </p>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="alert alert-error">
         <AlertCircle className="h-5 w-5" />
         <span>{error}</span>
-      </div>
-    );
-  }
-
-  if (!article) {
-    return (
-      <div className="alert alert-info">
-        <Book className="h-5 w-5" />
-        <span>Article not found</span>
       </div>
     );
   }
