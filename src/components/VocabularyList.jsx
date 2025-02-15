@@ -172,6 +172,7 @@ export default function VocabularyList() {
       const params = new URLSearchParams({ 
         page: pageIndex + 1,
         page_size: pageSize,
+        ...(globalFilter && { search: globalFilter }),
         ...(table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Mastered' && { mastered: true }),
         ...(table.getHeaderGroups()[0].headers[2].column.getFilterValue() === 'Learning' && { mastered: false })
       });
@@ -185,7 +186,7 @@ export default function VocabularyList() {
     } finally {
       setLoading(false);
     }
-  }, [table]);
+  }, [table, globalFilter]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this vocabulary item?')) {
@@ -228,6 +229,7 @@ export default function VocabularyList() {
   }, [
     pagination.pageIndex, 
     pagination.pageSize,
+    globalFilter,
     table.getState().columnFilters[2]?.value, 
     fetchVocabulary
   ]);

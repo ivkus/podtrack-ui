@@ -8,6 +8,18 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAudioFile(file);
+      // 如果标题为空，使用文件名（去掉扩展名）作为标题
+      if (!title) {
+        const fileName = file.name.replace(/\.[^/.]+$/, ''); // 移除文件扩展名
+        setTitle(fileName);
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -66,7 +78,7 @@ export default function ArticleUpload({ onSuccess, onCancel }) {
           </label>
           <input
             type="file"
-            onChange={(e) => setAudioFile(e.target.files[0])}
+            onChange={handleFileChange}
             accept="audio/*"
             className="file-input file-input-bordered w-full hover:file-input-primary"
             required

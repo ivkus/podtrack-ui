@@ -67,6 +67,8 @@ export const vocabularyApi = {
    * Get all vocabulary items with filtering and pagination
    * @param {URLSearchParams} params Query parameters for filtering and pagination
    * @param {number} [params.page] Page number (starts from 1)
+   * @param {number} [params.page_size] Items per page
+   * @param {string} [params.search] Search query
    * @param {boolean} [params.mastered] Filter by mastered status
    * @param {boolean} [params.ignored] Filter by ignored status
    * @returns {Promise<Object>} Paginated vocabulary items
