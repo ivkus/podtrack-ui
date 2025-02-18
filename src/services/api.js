@@ -39,11 +39,25 @@ export const articlesApi = {
   create: (data) => api.post('/articles/', data),
 
   /**
-   * Analyze an article
+   * Start transcription of an article's audio
    * @param {string|number} id Article ID
-   * @returns {Promise<Object>} Analysis results
+   * @returns {Promise<Object>} Transcription status
+   */
+  transcribe: (id) => api.post(`/articles/${id}/transcribe/`),
+
+  /**
+   * Start analysis of an article
+   * @param {string|number} id Article ID
+   * @returns {Promise<Object>} Analysis status
    */
   analyze: (id) => api.post(`/articles/${id}/analyze/`),
+
+  /**
+   * Start audio processing of an article
+   * @param {string|number} id Article ID
+   * @returns {Promise<Object>} Processing status
+   */
+  processAudio: (id) => api.post(`/articles/${id}/process_audio/`),
 
   /**
    * Delete an article

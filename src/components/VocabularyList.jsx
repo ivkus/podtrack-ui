@@ -4,7 +4,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getPaginationRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
 import { vocabularyApi } from '../services/api';
@@ -23,7 +22,6 @@ export default function VocabularyList() {
   const [vocabulary, setVocabulary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedRows, setSelectedRows] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [pagination, setPagination] = useState({
     pageIndex: 0,

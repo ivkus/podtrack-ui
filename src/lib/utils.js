@@ -13,10 +13,13 @@ export function cn(...inputs) {
  * Formats a date string into a human-readable format
  */
 export function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   });
 }
 
@@ -40,4 +43,10 @@ export function groupBy(array, key) {
     result[groupKey].push(item);
     return result;
   }, {});
+}
+
+export function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
