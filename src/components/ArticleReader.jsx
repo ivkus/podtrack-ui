@@ -11,6 +11,7 @@ export default function ArticleReader({ articleId }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [currentSentence, setCurrentSentence] = useState(null);
   const audioRef = useRef(null);
+  const [toast, setToast] = useState({ show: false, type: '', message: '' });
 
   const fetchArticle = async () => {
     try {
@@ -32,73 +33,36 @@ export default function ArticleReader({ articleId }) {
     fetchArticle();
   }, [articleId]);
 
-  const startTranscribe = async () => {
+  const showToast = (type, message) => {
+    setToast({ show: true, type, message });
+    setTimeout(() => {
+      setToast({ show: false, type: '', message: '' });
+    }, 3000);
+  };
+
+  const handleProcess = async (action) => {
     try {
-      await articlesApi.transcribe(articleId);
-      // 使用 toast 提示
-      const toastElement = document.getElementById('toast-success');
-      if (toastElement) {
-        toastElement.classList.remove('hidden');
-        setTimeout(() => {
-          toastElement.classList.add('hidden');
-        }, 3000);
+      switch (action) {
+        case 'transcribe':
+          await articlesApi.transcribe(articleId);
+          break;
+        case 'analyze':
+          await articlesApi.analyze(articleId);
+          break;
+        case 'audio':
+          await articlesApi.processAudio(articleId);
+          break;
       }
+      showToast('success', '操作成功');
       fetchArticle();
     } catch (error) {
-      // 使用 toast 提示错误
-      const toastElement = document.getElementById('toast-error');
-      if (toastElement) {
-        toastElement.classList.remove('hidden');
-        setTimeout(() => {
-          toastElement.classList.add('hidden');
-        }, 3000);
-      }
+      showToast('error', '操作失败');
     }
   };
 
-  const startAnalysis = async () => {
-    try {
-      await articlesApi.analyze(articleId);
-      const toastElement = document.getElementById('toast-success');
-      if (toastElement) {
-        toastElement.classList.remove('hidden');
-        setTimeout(() => {
-          toastElement.classList.add('hidden');
-        }, 3000);
-      }
-      fetchArticle();
-    } catch (error) {
-      const toastElement = document.getElementById('toast-error');
-      if (toastElement) {
-        toastElement.classList.remove('hidden');
-        setTimeout(() => {
-          toastElement.classList.add('hidden');
-        }, 3000);
-      }
-    }
-  };
-
-  const startAudioProcess = async () => {
-    try {
-      await articlesApi.processAudio(articleId);
-      const toastElement = document.getElementById('toast-success');
-      if (toastElement) {
-        toastElement.classList.remove('hidden');
-        setTimeout(() => {
-          toastElement.classList.add('hidden');
-        }, 3000);
-      }
-      fetchArticle();
-    } catch (error) {
-      const toastElement = document.getElementById('toast-error');
-      if (toastElement) {
-        toastElement.classList.remove('hidden');
-        setTimeout(() => {
-          toastElement.classList.add('hidden');
-        }, 3000);
-      }
-    }
-  };
+  const startTranscribe = () => handleProcess('transcribe');
+  const startAnalysis = () => handleProcess('analyze');
+  const startAudioProcess = () => handleProcess('audio');
 
   const togglePlay = () => {
     if (audioRef.current) {
@@ -295,16 +259,13 @@ export default function ArticleReader({ articleId }) {
       </div>
 
       {/* Toast 提示 */}
-      <div id="toast-success" className="toast toast-top toast-end hidden">
-        <div className="alert alert-success">
-          <span>操作成功</span>
+      {toast.show && (
+        <div className="toast toast-top toast-end">
+          <div className={`alert alert-${toast.type}`}>
+            <span>{toast.message}</span>
+          </div>
         </div>
-      </div>
-      <div id="toast-error" className="toast toast-top toast-end hidden">
-        <div className="alert alert-error">
-          <span>操作失败</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
